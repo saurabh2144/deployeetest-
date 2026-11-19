@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   deploy:
-    runs-on: [self-hosted, rpa-main]
+    runs-on: [self-hosted, Windows, X64]
     env:
       DEPLOY_PATH: ${{ vars.DEPLOY_PATH || 'E:\deployeetest-' }}
       APP_NAME: rpa-server
