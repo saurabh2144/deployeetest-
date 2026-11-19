@@ -1,0 +1,35 @@
+name: Deploy to Dev Server
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-dev
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, rpa-dev]
+    environment: development
+    env:
+      DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+      APP_NAME: rpa-server
+      APP_PORT: ${{ vars.APP_PORT || '3000' }}
+
+    steps:
+      - name: Get latest code
+        uses: actions/checkout@v4
+
+      - name: Copy files to deploy folder
+        run: node -e "['server.js','index.html','style.css','script.js'].forEach(f => require('fs').cpSync(f, require('path').join(process.env.DEPLOY_PATH, f)))"
+
+      - name: Restart app
+        run: pm2 restart ${{ env.APP_NAME }}
+
+      - name: Health check
+        run: node -e "setTimeout(() => fetch('http://127.0.0.1:' + process.env.APP_PORT + '/healthz').then(r => { if (!r.ok) process.exit(1); console.log('Deploy OK - app is healthy'); }).catch(e => { console.error('Health check failed:', e.message); process.exit(1); }), 5000)"

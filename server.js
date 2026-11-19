@@ -1,41 +1,47 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const { startCDWatcher } = require('./cd-runner'); // CD code in separate file
 
-const PORT = 3000;
+// Load settings from .env (PORT, HOST)
+if (fs.existsSync(path.join(__dirname, '.env'))) process.loadEnvFile(path.join(__dirname, '.env'));
 
-const mimeTypes = {
-  '.html': 'text/html',
-  '.css': 'text/css',
-  '.js': 'application/javascript',
-  '.json': 'application/json'
+const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || '0.0.0.0';
+
+// Only these files are served - nothing else in the folder is exposed
+const FILES = {
+  '/': ['index.html', 'text/html'],
+  '/index.html': ['index.html', 'text/html'],
+  '/style.css': ['style.css', 'text/css'],
+  '/script.js': ['script.js', 'application/javascript'],
 };
 
 const server = http.createServer((req, res) => {
-  let reqPath = req.url === '/' ? '/index.html' : req.url;
-  let filePath = path.join(__dirname, reqPath);
+  const url = req.url.split('?')[0];
 
-  fs.readFile(filePath, (err, content) => {
+  if (url === '/healthz') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ status: 'ok' }));
+  }
+
+  const file = FILES[url];
+  if (!file) {
+    res.writeHead(404, { 'Content-Type': 'text/plain' });
+    return res.end('404 Not Found');
+  }
+
+  fs.readFile(path.join(__dirname, file[0]), (err, content) => {
     if (err) {
-      res.writeHead(404, { 'Content-Type': 'text/plain' });
-      res.end('404 Not Found');
-    } else {
-      const ext = path.extname(filePath);
-      // Disable caching so latest deployed files serve immediately
-      res.writeHead(200, {
-        'Content-Type': mimeTypes[ext] || 'text/plain',
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
-      });
-      res.end(content);
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      return res.end('Server Error');
     }
+    res.writeHead(200, { 'Content-Type': `${file[1]}; charset=utf-8`, 'Cache-Control': 'no-cache' });
+    res.end(content);
   });
 });
 
-server.listen(PORT, () => {
-  console.log(`[Main RPA Server] Running at http://localhost:${PORT}`);
-  // CD start automatically with the server
-  startCDWatcher(10000);
-});
+server.listen(PORT, HOST, () => console.log(`[RPA Server] Running at http://${HOST}:${PORT}`));
+
+// Graceful shutdown on PM2 restart
+process.on('SIGINT', () => server.close(() => process.exit(0)));
+process.on('SIGTERM', () => server.close(() => process.exit(0)));
