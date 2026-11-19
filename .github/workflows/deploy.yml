@@ -5,14 +5,14 @@ on:
   push:
     branches: [main]
 
-  # --- OPTION 2: SCHEDULED DEPLOYMENT (Raat ko 12:00 baje IST par auto-deploy karne ke liye) ---
-  # Jab raat 12 baje wala schedule chahiye ho, to:
-  # 1. Upar wale "push:" ko comment (#) kar dein.
-  # 2. Niche wale "schedule:" aur "- cron:" ko uncomment kar dein.
+  # --- OPTION 2: SCHEDULED DEPLOYMENT (Daily at 12:00 AM Midnight IST) ---
+  # To enable midnight scheduled deployment:
+  # 1. Comment out the "push" section above.
+  # 2. Uncomment the "schedule" section below.
   # schedule:
-  #   - cron: '30 18 * * *' # 18:30 UTC = 12:00 AM IST (Midnight)
+  #   - cron: '30 18 * * *' # 18:30 UTC corresponds to 12:00 AM IST
 
-  # Manual button trigger in GitHub Actions tab
+  # Manual workflow trigger from GitHub Actions UI
   workflow_dispatch:
 
 permissions:
