@@ -6,5 +6,5 @@ let taskCount = 0;
 btn.addEventListener('click', () => {
   taskCount++;
   const timestamp = new Date().toLocaleTimeString();
-  output.innerText = `[${timestamp}] Production RPA Task #${taskCount} completed successfully!`;
+  output.innerText = `[${timestamp}] Task #${taskCount} executed successfully!`;
 });
