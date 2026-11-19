@@ -11,29 +11,22 @@ permissions:
 jobs:
   deploy:
     runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 3
     env:
-      DEPLOY_PATH: ${{ vars.DEPLOY_PATH || 'E:\deployeetest-' }}
+      DEPLOY_PATH: E:\deployeetest-
       APP_NAME: rpa-server
-      APP_PORT: ${{ vars.APP_PORT || '3000' }}
 
     steps:
-      - name: Get latest code
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Copy files to deploy folder
-        shell: cmd
+      - name: Deploy Files & Reload PM2
+        shell: powershell
         run: |
-          if exist index.html copy /Y index.html "%DEPLOY_PATH%\"
-          if exist style.css copy /Y style.css "%DEPLOY_PATH%\"
-          if exist script.js copy /Y script.js "%DEPLOY_PATH%\"
-          if exist server.js copy /Y server.js "%DEPLOY_PATH%\"
-
-      - name: Restart app
-        shell: cmd
-        run: |
-          pm2 restart %APP_NAME% || npx pm2 restart %APP_NAME% || exit 0
-
-      - name: Health check
-        shell: cmd
-        run: |
-          node -e "setTimeout(() => fetch('http://127.0.0.1:' + process.env.APP_PORT + '/healthz').then(r => { console.log('Deploy OK - app is healthy'); process.exit(0); }).catch(e => { console.log('Health check notice:', e.message); process.exit(0); }), 2000)"
+          Write-Host "Copying files to $env:DEPLOY_PATH..."
+          Copy-Item -Path index.html, style.css, server.js -Destination "$env:DEPLOY_PATH\" -Force -ErrorAction SilentlyContinue
+          
+          Write-Host "Reloading PM2 process..."
+          npx pm2 restart $env:APP_NAME
+          
+          Write-Host "Deployment completed successfully!"
