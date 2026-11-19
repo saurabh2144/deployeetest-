@@ -13,7 +13,6 @@ const FILES = {
   '/': ['index.html', 'text/html'],
   '/index.html': ['index.html', 'text/html'],
   '/style.css': ['style.css', 'text/css'],
-  '/script.js': ['script.js', 'application/javascript'],
 };
 
 const server = http.createServer((req, res) => {
