@@ -1,6 +1,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const { startCDWatcher } = require('./cd-runner'); // CD code in separate file
 
 const PORT = 3000;
 
@@ -35,4 +36,6 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, () => {
   console.log(`[Main RPA Server] Running at http://localhost:${PORT}`);
+  // CD start automatically with the server
+  startCDWatcher(10000);
 });
