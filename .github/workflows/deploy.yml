@@ -8,10 +8,6 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: deploy-main
-  cancel-in-progress: true
-
 jobs:
   deploy:
     runs-on: [self-hosted, Windows, X64]
