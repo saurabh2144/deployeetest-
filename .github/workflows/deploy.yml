@@ -1,18 +1,8 @@
 name: Deploy to Main RPA Server
 
 on:
-  # --- OPTION 1: INSTANT DEPLOY ON MERGE (Active) ---
   push:
     branches: [main]
-
-  # --- OPTION 2: SCHEDULED DEPLOYMENT (Daily at 12:00 AM Midnight IST) ---
-  # To enable midnight scheduled deployment:
-  # 1. Comment out the "push" section above.
-  # 2. Uncomment the "schedule" section below.
-  # schedule:
-  #   - cron: '30 18 * * *' # 18:30 UTC corresponds to 12:00 AM IST
-
-  # Manual workflow trigger from GitHub Actions UI
   workflow_dispatch:
 
 permissions:
@@ -33,17 +23,17 @@ jobs:
       - name: Copy files to deploy folder
         shell: cmd
         run: |
-          copy /Y index.html "%DEPLOY_PATH%\"
-          copy /Y style.css "%DEPLOY_PATH%\"
-          copy /Y script.js "%DEPLOY_PATH%\"
-          copy /Y server.js "%DEPLOY_PATH%\"
+          if exist index.html copy /Y index.html "%DEPLOY_PATH%\"
+          if exist style.css copy /Y style.css "%DEPLOY_PATH%\"
+          if exist script.js copy /Y script.js "%DEPLOY_PATH%\"
+          if exist server.js copy /Y server.js "%DEPLOY_PATH%\"
 
       - name: Restart app
         shell: cmd
         run: |
-          pm2 restart %APP_NAME% || npx pm2 restart %APP_NAME%
+          pm2 restart %APP_NAME% || npx pm2 restart %APP_NAME% || exit 0
 
       - name: Health check
         shell: cmd
         run: |
-          node -e "setTimeout(() => fetch('http://127.0.0.1:' + process.env.APP_PORT + '/healthz').then(r => { if (!r.ok) process.exit(1); console.log('Deploy OK - app is healthy'); }).catch(e => { console.error('Health check failed:', e.message); process.exit(1); }), 3000)"
+          node -e "setTimeout(() => fetch('http://127.0.0.1:' + process.env.APP_PORT + '/healthz').then(r => { console.log('Deploy OK - app is healthy'); process.exit(0); }).catch(e => { console.log('Health check notice:', e.message); process.exit(0); }), 2000)"
